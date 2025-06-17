@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Kodex für kritisches Denken</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Roboto', sans-serif;
+      background:
+        linear-gradient(rgba(240,244,248,0.6), rgba(217,226,236,0.2)),
+        url('dark_impr.png') no-repeat center center fixed;
+      background-size: cover;
+      overflow: hidden;
+    }
+    h2 {
+      text-align: center;
+      color: #102a43;
+      font-weight: 400;
+      margin-top: 20px;
+      letter-spacing: 1px;
+    }
+    #chart {
+      width: 100vw;
+      height: calc(100vh - 140px);
+    }
+    #info {
+      position: absolute;
+      top: 50%;
+      right: 40px;
+      transform: translateY(-50%);
+      background: rgba(255,255,255,0.9);
+      padding: 10px;
+      border-radius: 4px;
+      max-width: 600px;
+      font-size: 14px;
+      color: #102a43;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    #info blockquote.twitter-tweet { max-width: 300px !important; margin: 0 auto; }
+    #info .twitter-tweet-rendered,
+    #info iframe[src*="platform.twitter.com"] {
+      max-width: 300px !important;
+      width: 100% !important;
+    }
+    #detail-box {
+      display: none;
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255,255,255,0.95);
+      padding: 20px;
+      border-radius: 6px;
+      max-width: 500px; width: 80%; max-height: 80%; overflow-y: auto;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      z-index: 100;
+    }
+    #close-detail { position: absolute; top: 8px; right: 8px; background: transparent; border: none; font-size: 1.2em; cursor: pointer; }
+    .node circle { stroke-width: 2px; filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.1)); cursor: pointer; }
+    .node text { font-size: 16px; fill: #fff; pointer-events: all; cursor: pointer; }
+    .link { fill: none; stroke-width: 4px; stroke-linecap: round;}
+  </style>
+</head>
+<body>
+  <h2>Kodex für kritisches Denken</h2>
+  <div id="chart"></div>
+  <div id="info">Klicke auf einen Aspekt, um ein Beispiel zu sehen.</div>
+  <div id="detail-box">
+    <button id="close-detail">×</button>
+    <div id="detail-content"></div>
+  </div>
+  <script src="https://d3js.org/d3.v6.min.js"></script>
+  <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+  <script>
+    const examples = {
+      "Glaubwürdigkeit von Quellen und Beweisen": `
+         <p>Beim Beurteilen der Glaubwürdigkeit von Informationen müssen meist zwei Ebenen im Blick behalten werden:</p>
+          <ul>
+            <li><strong>Unmittelbare (primäre) Quelle:</strong> Die Person, Zeitung oder der Blog, von der man die Information direkt beziehst.</li>
+            <li><strong>Ursprüngliche (sekundäre) Quelle:</strong> Die Studie, das Behördendokument, die Primärstatistik oder das Original-Interview, auf das sich die unmittelbare Quelle stützt.</li>
+          </ul>
+          <blockquote class="twitter-tweet">
+          <p lang="en" dir="ltr">
+            NOAA makes it official. Last 8 years… global cooling… CO₂ warming is a hoax.
+          </p>
+          &mdash; Steve Milloy (@JunkScience)
+          <a href="https://twitter.com/JunkScience/status/1613724250011242497">
+            January 13, 2023
+          </a>
+          </blockquote>
+          <p>In diesem Beispiel sehen wir sehr schön, dass wir sowohl die Glaubwürdigkeit der primären Quelle Steve Milloy überprüfen sollten, als auch die sekundäre Quelle (NOAA), auf die sich Steve Milloy bezieht.</p>
+        <a href="#" class="show-detail">▶ Mehr Details anzeigen</a>
+      `,
+      "Glaubwürdigkeit von Quellen und Beweisen Detail": `
+        <ul>
+          <li><strong>Unmittelbare (primäre) Quelle:</strong> z. B. ein Blog oder eine Zeitung</li>
+          <li><strong>Ursprüngliche (sekundäre) Quelle:</strong> z. B. Studie oder Primärstatistik</li>
+        </ul>
+      `,
+      "Prämissen und Schlussfolgerungen identifizieren":
+        "Beispiel: In der Aussage 'Alle Menschen sind sterblich. Sokrates ist ein Mensch. Also ist Sokrates sterblich.' sind die Prämissen 'Alle Menschen sind sterblich' und 'Sokrates ist ein Mensch' und die Schlussfolgerung 'Sokrates ist sterblich'.",
+      "Fakten vs. Meinungen unterscheiden":
+        "Beispiel: 'Der Eiffelturm ist 324 Meter hoch.' ist ein Fakt, während 'Der Eiffelturm ist das schönste Bauwerk der Welt.' eine Meinung darstellt.",
+      "Komplexe Probleme zerlegen":
+        "Beispiel: Bei der Planung eines Umzugs kann man das Gesamtproblem in Teilaufgaben wie 'Zeitplan erstellen', 'Transportoptionen prüfen' und 'Kisten packen' zerlegen."
+    };
+    const data = {
+      "name": "Kodex für kritisches Denken",
+      "children": [
+        { "name": "Kognitive Fähigkeiten", "children": [
+            { "name": "Analyse", "children": [
+                { "name": "Prämissen und Schlussfolgerungen identifizieren" },
+                { "name": "Fakten vs. Meinungen unterscheiden" },
+                { "name": "Komplexe Probleme zerlegen" }
+            ]},
+            { "name": "Bewertung", "children": [
+                { "name": "Glaubwürdigkeit von Quellen und Beweisen" },
+                { "name": "Logische Konsistenz (Fehlererkennung)" },
+                { "name": "Relevanz von Daten" }
+            ]},
+            { "name": "Schlussfolgerung", "children": [
+                { "name": "Ziehen gültiger Schlussfolgerungen" },
+                { "name": "Hypothesen" },
+                { "name": "Analoges und statistisches Denken" }
+            ]},
+            { "name": "Erklärung", "children": [
+                { "name": "Begründung darlegen" },
+                { "name": "Schlussfolgerungen rechtfertigen" },
+                { "name": "Klar lehren und überzeugen" }
+            ]}
+        ]},
+        { "name": "Einstellungen", "children": [
+            { "name": "Aufgeschlossenheit", "children": [
+                { "name": "Alternative Standpunkte berücksichtigen" },
+                { "name": "Eigene Annahmen überprüfen" }
+            ]},
+            { "name": "Geistige Demut", "children": [
+                { "name": "Unsicherheit anerkennen" },
+                { "name": "Bereitschaft, Überzeugungen zu revidieren" }
+            ]},
+            { "name": "Neugier", "children": [
+                { "name": "Tiefgehende Fragen stellen" },
+                { "name": "Neue Informationen suchen" }
+            ]},
+            { "name": "Skepsis", "children": [
+                { "name": "Anekdotische Behauptungen hinterfragen" },
+                { "name": "Außergewöhnliche Behauptungen prüfen" }
+            ]}
+        ]},
+        { "name": "Wissen und Strategien", "children": [
+            { "name": "Fachwissen", "children": [
+                { "name": "Fachspezifische Fakten" },
+                { "name": "Konzeptuelle Rahmenwerke" }
+            ]},
+            { "name": "Denkmethoden", "children": [
+                { "name": "Deduktion und Induktion" },
+                { "name": "Bayesianisches Denken" },
+                { "name": "Gedankenexperimente" }
+            ]},
+            { "name": "Verzerrungen und Fehler", "children": [
+                { "name": "Vertrautheit mit gängigen Verzerrungen" },
+                { "name": "Strategien zur Entzerrung" }
+            ]},
+            { "name": "Forschungsmethoden", "children": [
+                { "name": "Experimente und Umfragen gestalten" },
+                { "name": "Grundlagen der statistischen Analyse" },
+                { "name": "Qualitativ vs. quantitativ" }
+            ]}
+        ]},
+        { "name": "Metakognition", "children": [
+            { "name": "Selbstüberwachung", "children": [
+                { "name": "Verwirrung erkennen" },
+                { "name": "Eigene Denkprozesse nachverfolgen" }
+            ]},
+            { "name": "Selbstkorrektur", "children": [
+                { "name": "Fehlerhaftes Denken überarbeiten" },
+                { "name": "Feedback einholen" }
+            ]},
+            { "name": "Reflexive Praxis", "children": [
+                { "name": "Erkenntnisse protokollieren" },
+                { "name": "Analyse von Entscheidungen" }
+            ]}
+        ]},
+        { "name": "Konversation", "children": [
+            { "name": "Argumentation", "children": [
+                { "name": "Ein schlüssiges Argument aufbauen" },
+                { "name": "Gegenargumente antizipieren" }
+            ]},
+            { "name": "Aktives Zuhören", "children": [
+                { "name": "Standpunkte anderer paraphrasieren" },
+                { "name": "Klärende Fragen stellen" }
+            ]},
+            { "name": "Dialog und Debatte", "children": [
+                { "name": "Respektvoller Austausch" },
+                { "name": "Fokussierung auf Beweise beibehalten" }
+            ]}
+        ]}
+      ]
+    };
+
+    const margin = { top: 20, right: 120, bottom: 20, left: 300 };
+    const width = window.innerWidth - margin.left - margin.right;
+    const height = window.innerHeight - margin.top - margin.bottom - 140;
+    const color = d3.scaleOrdinal(d3.schemeSet3);
+    const linkColor = d3.scaleLinear().domain([0, 5]).range(['#cfd6db', '#6f8090']);
+
+    const svg = d3.select('#chart')
+      .append('svg')
+      .attr('width', width + margin.left + margin.right)
+      .attr('height', height + margin.top + margin.bottom)
+      .call(d3.zoom().scaleExtent([0.5, 2]).on('zoom', event => g.attr('transform', event.transform)));
+
+    const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+    const treemap = d3.tree().size([height, width]);
+    let root = d3.hierarchy(data);
+    root.x0 = height / 2;
+    root.y0 = 0;
+
+    // Alle Knoten einklappen
+    function collapse(d) {
+      if (d.children) {
+        d._children = d.children;
+        d._children.forEach(collapse);
+        d.children = null;
+      }
+    }
+    collapse(root);
+
+    // Pfad für Links
+    function diagonal(d) {
+      return `M${d.source.y},${d.source.x}
+              C${(d.source.y + d.target.y)/2},${d.source.x}
+               ${(d.source.y + d.target.y)/2},${d.target.x}
+               ${d.target.y},${d.target.x}`;
+    }
+
+    let i = 0;
+    function update(source) {
+      const treeData = treemap(root);
+      const nodes = treeData.descendants();
+      const links = treeData.links();
+      nodes.forEach(d => { d.y = d.depth * 180; });
+
+      // Nodes
+      const node = g.selectAll('g.node').data(nodes, d => d.id || (d.id = ++i));
+      const nodeEnter = node.enter().append('g')
+        .attr('class', 'node')
+        .attr('transform', d => `translate(${source.y0},${source.x0})`)
+        .on('click', (event, d) => {
+          if (d.children) { d._children = d.children; d.children = null; }
+          else { d.children = d._children; d._children = null; }
+          update(root);
+          const key = d.data.name;
+          d3.select('#info').html(`<strong>${key}</strong><br>${examples[key]||'Kein Beispiel verfügbar.'}`);
+          d3.select('#info').selectAll('.show-detail')
+            .on('click', function(e) {
+              e.preventDefault();
+              d3.select('#detail-content').html(examples[key + ' Detail']||'Keine Details vorhanden.');
+              d3.select('#detail-box').style('display','block');
+              if (window.twttr?.widgets?.load) twttr.widgets.load(document.getElementById('detail-content'));
+            });
+          if (window.twttr?.widgets?.load) twttr.widgets.load(document.getElementById('info'));
+        });
+      nodeEnter.append('circle').attr('r', 0).attr('fill', d => color(d.depth));
+      nodeEnter.append('text')
+        .attr('x', d => (d.children || d._children) ? -15 : 15)
+        .attr('dy', '.35em')
+        .attr('text-anchor', d => (d.children || d._children) ? 'end' : 'start')
+        .text(d => d.data.name);
+
+      const nodeUpdate = nodeEnter.merge(node);
+      nodeUpdate.transition().duration(300).attr('transform', d => `translate(${d.y},${d.x})`);
+      nodeUpdate.select('circle').transition().duration(300).attr('r', 8);
+      const nodeExit = node.exit();
+      nodeExit.transition().duration(300)
+        .attr('transform', d => `translate(${source.y},${source.x})`)
+        .remove();
+
+      // Links
+      const link = g.selectAll('path.link').data(links, d => d.target.id);
+      const linkEnter = link.enter().insert('path', 'g')
+        .attr('class', 'link')
+        .attr('d', d => {
+          const o = { x: source.x0, y: source.y0 };
+          return diagonal({ source: o, target: o });
+        })
+        .attr('stroke', d => linkColor(d.target.depth));
+      linkEnter.merge(link).transition().duration(300).attr('d', d => diagonal(d));
+      const linkExit = link.exit();
+      linkExit.transition().duration(300)
+        .attr('d', d => {
+          const o = { x: source.x, y: source.y };
+          return diagonal({ source: o, target: o });
+        })
+        .remove();
+
+      nodes.forEach(d => { d.x0 = d.x; d.y0 = d.y; });
+    }
+
+    update(root);
+    d3.select('#close-detail').on('click', () => {
+      d3.select('#detail-box').style('display','none');
+      d3.select('#detail-content').html('');
+    });
+  </script>
+</body>
+</html>
